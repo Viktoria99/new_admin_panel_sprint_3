@@ -1,0 +1,4 @@
+backoff==2.2.1
+psycopg==3.1.19
+elasticsearch==8.14.0
+pydantic==2.7.1

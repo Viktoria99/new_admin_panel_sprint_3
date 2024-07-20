@@ -1,0 +1,6 @@
+services:
+  etl_service:
+    build:
+      context: .
+      dockerfile: postgres_to_es/Dockerfile
+  
