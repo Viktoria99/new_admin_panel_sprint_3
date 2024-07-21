@@ -6,7 +6,7 @@ from psycopg.rows import class_row, tuple_row
 
 from logger import logger_load
 from models import Film, Movie_item, Person
-from settings import (
+from constants import (
     ACTOR,
     ACTORS,
     ACTORS_NAMES,
@@ -16,14 +16,21 @@ from settings import (
     GENRES,
     WRITER,
     WRITERS,
-    WRITERS_NAMES,
-    DSL,
+    WRITERS_NAMES
 )
 from sql import select_one_film
 from utils import get_first, get_sql_genre_film, get_sql_person_film
 
+from pydantic_settings import BaseSettings
+from psycopg.conninfo import make_conninfo
 
 class EnricherService:
+    dsn: str
+
+    def __init__(self, settings_db: BaseSettings) -> None:
+        connect_db = settings_db.database_settings.get_dsn()
+        self.dsn = make_conninfo(connect_db)
+
     def richer_films(self, id_list: List) -> List:
         film_list = []
         for id in id_list:
@@ -47,7 +54,7 @@ class EnricherService:
 
     def get_film(self, film_id: str) -> Film:
         with contextlib.closing(
-            psycopg.connect(**DSL, row_factory=class_row(Film))
+            psycopg.connect(self.dsn, row_factory=class_row(Film))
         ) as pg_conn:
             with pg_conn.cursor() as cur:
                 sql = select_one_film.format(film_id)
@@ -56,7 +63,7 @@ class EnricherService:
 
     def get_film_genre(self, film_id: str) -> List:
         with contextlib.closing(
-            psycopg.connect(**DSL, row_factory=tuple_row)
+            psycopg.connect(self.dsn, row_factory=tuple_row)
         ) as pg_conn:
             with pg_conn.cursor() as cur:
                 genre_sql = get_sql_genre_film()
@@ -66,7 +73,7 @@ class EnricherService:
 
     def get_film_person(self, film_id: str, film: Film) -> Film:
         with contextlib.closing(
-            psycopg.connect(**DSL, row_factory=class_row(Person))
+            psycopg.connect(self.dsn, row_factory=class_row(Person))
         ) as pg_conn:
             with pg_conn.cursor() as cur:
                 sql = get_sql_person_film()

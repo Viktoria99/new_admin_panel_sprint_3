@@ -1,35 +1,39 @@
-import os
-from pathlib import Path
 
-DSL = {
-    'dbname': os.environ.get('dbname', 'moviesdb'),
-    'user': os.environ.get('user', 'adminmovies'),
-    'password': os.environ.get('password', 'admin24qwl'),
-    'host': os.environ.get('host', 'localhost'),
-    'port': os.environ.get('port', 5432),
-    'options': os.environ.get('options', '-c search_path=content'),
-}
+from pathlib import Path
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class DatabaseSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='postgres_')
+    host: str = Field('localhost', alias='host')
+    port: int = Field(5432, alias='port')
+    dbname: str = Field('moviesdb', alias='dbname')
+    user: str = 'adminmovies'
+    password: str = 'admin24qwl'
+
+    def get_dsn(self) -> dict:
+        return self.model_dump()
+
+class ElasticsearchSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='es_')
+    host: str = 'localhost'
+    port: str = '9200'
+
+    def get_host(self):
+        return f'http://{self.host}:{self.port}'
+
+class Settings(BaseSettings):
+    database_settings: DatabaseSettings = DatabaseSettings()
+    elasticsearch_settings: ElasticsearchSettings = ElasticsearchSettings()
+
+settings = Settings()
 
 BATCH_SIZE = 100
 STATE_KEY = 'last_load_date'
 ETL_INDEX = 'movies'
 
-WRITER = 'writer'
-DIRECTOR = 'director'
-ACTOR = 'actor'
-
-DIRECTORS_NAMES = 'directors_names'
-ACTORS_NAMES = 'actors_names'
-WRITERS_NAMES = 'writers_names'
-
-DIRECTORS = 'directors'
-ACTORS = 'actors'
-WRITERS = 'writers'
-GENRES = 'genres'
-
 FILM_COUNT = 'count'
-
-ELASTIC_URL = 'http://localhost:9200/'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

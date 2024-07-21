@@ -6,20 +6,20 @@ from ProducerService import ProducerService
 from settings import STATE_KEY
 from State import State
 from TransformService import TransformService
+from settings import settings
 
 
 def main():
 
     state_storage = State()
-    producer_service = ProducerService()
-    richer_service = EnricherService()
-    transform_service = TransformService()
+    producer_service = ProducerService(settings)
+    richer_service = EnricherService(settings)
+    transform_service = TransformService(settings)
 
     load_date = state_storage.get_state(STATE_KEY)
     logger_load.info(
         'Дата начала импорта данных = {date_load}'.format(date_load=load_date)
     )
-    print('ДАТА = {dt}'.format(dt=load_date))
     for item in producer_service.get_film(load_date):
         films = richer_service.richer_films(item, load_date)
         transform_service.save_etl(films)
